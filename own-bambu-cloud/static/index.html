@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Own your bambu Cloud — by ryanbenhassine.com</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="/static/css/app.css?v=2.0">
+</head>
+<body>
+
+  <!-- ================= SIDEBAR NAVIGATION ================= -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <i class="ti ti-cube-3d-sphere"></i>
+      </div>
+      <div class="brand-info">
+        <h1>Own your bambu Cloud</h1>
+        <a href="https://ryanbenhassine.com" target="_blank" class="brand-author" style="text-decoration: none;">by ryanbenhassine.com</a>
+      </div>
+    </div>
+
+    <!-- Active Printer Switcher -->
+    <div class="sidebar-printer-card">
+      <div class="sidebar-printer-label">
+        <span>Active Printer</span>
+        <button class="btn-icon" style="width:20px; height:20px; font-size:12px;" onclick="App.openModal('addPrinterModal')" title="Add New Printer">
+          <i class="ti ti-plus"></i>
+        </button>
+      </div>
+      <select id="printerSelect" class="printer-select-compact">
+        <option value="">No Printer Added</option>
+      </select>
+    </div>
+
+    <!-- Nav Items -->
+    <nav class="sidebar-nav">
+      <button class="nav-item-btn active" data-tab="dashboard">
+        <i class="ti ti-dashboard"></i> <span>Dashboard</span>
+      </button>
+      <button class="nav-item-btn" data-tab="filaments">
+        <i class="ti ti-cylinder"></i> <span>Filament Stock</span>
+      </button>
+      <button class="nav-item-btn" data-tab="aieye">
+        <i class="ti ti-eye"></i> <span>AI Eye Guardian</span>
+      </button>
+      <button class="nav-item-btn" data-tab="videos">
+        <i class="ti ti-video"></i> <span>Video Studio & Logo</span>
+      </button>
+      <button class="nav-item-btn" data-tab="schedule">
+        <i class="ti ti-calendar-time"></i> <span>Schedule</span>
+        <span class="badge-pro">PRO</span>
+      </button>
+      <button class="nav-item-btn" data-tab="printers">
+        <i class="ti ti-printer"></i> <span>Printers (Manual)</span>
+      </button>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <div>Own your bambu Cloud v1.0</div>
+      <div>License: <a href="https://ryanbenhassine.com" target="_blank">ryanbenhassine.com</a></div>
+      <div>Author: <a href="https://ryanbenhassine.com" target="_blank">Ryan Ben Hassine</a></div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN CONTENT WRAPPER ================= -->
+  <div class="app-main">
+
+    <!-- Top Action Bar -->
+    <header class="top-bar">
+      <div class="top-bar-title" id="pageTitle">
+        <i class="ti ti-dashboard" style="color: var(--primary);"></i> Dashboard
+      </div>
+      <div class="top-bar-actions">
+        <button class="btn-primary" onclick="App.openModal('addPrinterModal')">
+          <i class="ti ti-plus"></i> Add Printer
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="content-container">
+
+      <!-- EMPTY STATE: Shown when 0 printers are configured -->
+      <div id="emptyPrintersState" class="empty-printers-card" style="display: none;">
+        <div class="empty-icon">
+          <i class="ti ti-printer-off"></i>
+        </div>
+        <h2>No Bambu Lab Printers Connected</h2>
+        <p>
+          Welcome to <strong>Own your bambu Cloud</strong>! You are in clean manual testing mode.<br>
+          Add your printer manually with its local IP, LAN access code, and serial number to start live telemetry, thermal monitoring, and AI protection.
+        </p>
+        <button class="btn-primary" style="padding: 0.9rem 1.8rem; font-size: 1rem;" onclick="App.openModal('addPrinterModal')">
+          <i class="ti ti-plus"></i> Add Bambu Printer Manually
+        </button>
+        <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1.5rem;">
+          Find your Access Code & Serial on your printer screen under: <strong>Settings &rarr; WLAN / LAN Only Mode</strong>.
+        </div>
+      </div>
+
+      <!-- ================= TAB: DASHBOARD ================= -->
+      <section id="tab-dashboard" class="tab-section active">
+        <div class="dashboard-grid">
+          
+          <!-- Left Column: Camera, Progress, Controls -->
+          <div class="dash-main-col">
+            
+            <div class="card" style="padding: 0; overflow: hidden;">
+              <div class="camera-box">
+                <img id="liveCameraStream" src="/static/placeholder.jpg" alt="Bambu Live Chamber Stream">
+                <div class="camera-overlay-badge">
+                  <span class="live-dot"></span> LIVE CHAMBER CAM
+                </div>
+                <div class="camera-toolbar">
+                  <button class="btn-icon" onclick="App.updateCameraSource()" title="Refresh Feed">
+                    <i class="ti ti-refresh"></i>
+                  </button>
+                  <button class="btn-icon" onclick="App.toggleLight()" id="lightToggleBtn" title="Toggle Chamber Light">
+                    <i class="ti ti-bulb"></i>
+                  </button>
+                  <button class="btn-icon" onclick="App.runAIEyeInspection()" title="Run AI Eye Inspection Now">
+                    <i class="ti ti-scan"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Progress Strip -->
+              <div style="padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div>
+                    <h3 id="jobName" style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">No Print Running</h3>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;" id="remainingTimeText">-- mins remaining</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <span id="printerStateBadge" class="stat-pill-val" style="font-size: 0.95rem; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.06);">IDLE</span>
+                    <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;" id="layerProgressText">Layer: 0 / 0</div>
+                  </div>
+                </div>
+
+                <div class="progress-container">
+                  <div class="progress-header">
+                    <span>Progress</span>
+                    <span id="progressPctText">0%</span>
+                  </div>
+                  <div class="progress-track">
+                    <div id="progressFillBar" class="progress-fill" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <div class="control-btn-grid">
+                  <button class="btn-action" onclick="App.sendAction('resume')">
+                    <i class="ti ti-player-play" style="color: var(--success);"></i>
+                    <span>Resume</span>
+                  </button>
+                  <button class="btn-action" onclick="App.sendAction('pause')">
+                    <i class="ti ti-player-pause" style="color: var(--warning);"></i>
+                    <span>Pause</span>
+                  </button>
+                  <button class="btn-action btn-danger" onclick="if(confirm('Stop active print?')) App.sendAction('stop')">
+                    <i class="ti ti-player-stop" style="color: var(--danger);"></i>
+                    <span>Stop</span>
+                  </button>
+                  <button class="btn-action" onclick="App.toggleLight()">
+                    <i class="ti ti-bulb"></i>
+                    <span>Light</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smart Position Buttons -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="ti ti-target" style="color: var(--primary);"></i> Smart Position Buttons</div>
+                <span style="font-size:0.75rem; color:var(--text-dim);">1-Click Presets</span>
+              </div>
+              <div class="control-btn-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <button class="btn-action" onclick="App.sendAction('service')" title="Bed down 70% & head front-center for nozzle change">
+                  <i class="ti ti-tool"></i>
+                  <span>Service</span>
+                </button>
+                <button class="btn-action" onclick="App.sendAction('trash')" title="Purge chute / poop bucket">
+                  <i class="ti ti-trash"></i>
+                  <span>Trash</span>
+                </button>
+                <button class="btn-action" onclick="App.sendAction('bump')" title="Drop bed to Z250 and back to Z20 to clean stringing">
+                  <i class="ti ti-arrows-vertical"></i>
+                  <span>Bump</span>
+                </button>
+                <button class="btn-action" onclick="App.sendAction('center')" title="Head to bed center">
+                  <i class="ti ti-focus-2"></i>
+                  <span>Center</span>
+                </button>
+                <button class="btn-action" onclick="App.sendAction('home')" title="Auto-home (G28)">
+                  <i class="ti ti-home"></i>
+                  <span>Home</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Jog & Raw G-code Console -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="ti ti-terminal-2" style="color: var(--primary);"></i> G-code & Jog Control</div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <input type="text" id="gcodeInput" class="form-input" placeholder="Enter G-code command (e.g. M104 S220, M140 S60)...">
+                <button class="btn-primary" onclick="App.sendGcode()" style="padding: 0 1.25rem;">
+                  <i class="ti ti-send"></i> Send
+                </button>
+              </div>
+
+              <!-- Jog Buttons -->
+              <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">X AXIS</span>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'X', -10)">-10</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'X', -1)">-1</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'X', 1)">+1</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'X', 10)">+10</button>
+                  </div>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Y AXIS</span>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Y', -10)">-10</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Y', -1)">-1</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Y', 1)">+1</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Y', 10)">+10</button>
+                  </div>
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Z AXIS</span>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Z', -10)">-10</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Z', -1)">-1</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Z', 1)">+1</button>
+                    <button class="preset-btn" onclick="App.sendAction('jog', null, 'Z', 10)">+10</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Telemetry, Bed Position, AMS Slots -->
+          <div class="dash-sidebar-col">
+            
+            <!-- Thermals -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="ti ti-flame" style="color: var(--primary);"></i> Thermal Telemetry</div>
+              </div>
+              <div class="stats-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="stat-pill">
+                  <div class="stat-pill-label">Nozzle</div>
+                  <div class="stat-pill-val" id="nozzleTemp">0°C</div>
+                  <div class="stat-pill-target" id="nozzleTarget">/ 0°C</div>
+                </div>
+                <div class="stat-pill">
+                  <div class="stat-pill-label">Heatbed</div>
+                  <div class="stat-pill-val" id="bedTemp">0°C</div>
+                  <div class="stat-pill-target" id="bedTarget">/ 0°C</div>
+                </div>
+              </div>
+              <div class="stats-row" style="grid-template-columns: 1fr; margin-top: 0.6rem;">
+                <div class="stat-pill">
+                  <div class="stat-pill-label">Chamber Temp</div>
+                  <div class="stat-pill-val" id="chamberTemp" style="font-size: 1.1rem;">0°C</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fans -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="ti ti-fan" style="color: var(--primary);"></i> Fans Speed</div>
+              </div>
+              <div class="stats-row" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="stat-pill">
+                  <div class="stat-pill-label">Part</div>
+                  <div class="stat-pill-val" id="fanPartCool" style="font-size: 1.05rem;">0%</div>
+                </div>
+                <div class="stat-pill">
+                  <div class="stat-pill-label">Aux</div>
+                  <div class="stat-pill-val" id="fanAux" style="font-size: 1.05rem;">0%</div>
+                </div>
+                <div class="stat-pill">
+                  <div class="stat-pill-label">Chamber</div>
+                  <div class="stat-pill-val" id="fanChamber" style="font-size: 1.05rem;">0%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bed Position Tracker -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="ti ti-layers-subtract" style="color: var(--primary);"></i> Bed Position Tracker</div>
+              </div>
+              <div class="bed-tracker-box">
+                <div class="bed-slider-header">
+                  <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Z-Height (0-256mm)</span>
+                  <span id="bedSliderVal" style="font-size: 0.85rem; font-weight: 800; color: var(--primary);">0% (~0mm)</span>
+                </div>
+                <input type="range" id="bedSlider" class="bed-slider" min="0" max="100" value="0">
+                <div class="bed-presets-grid">
+                  <button class="preset-btn" onclick="App.sendAction('bed_pct', 0)">Top (0%)</button>
+                  <button class="preset-btn" onclick="App.sendAction('bed_pct', 25)">25%</button>
+                  <button class="preset-btn" onclick="App.sendAction('bed_pct', 50)">50%</button>
+                  <button class="preset-btn" onclick="App.sendAction('bed_pct', 70)">70%</button>
+                  <button class="preset-btn" onclick="App.sendAction('bed_pct', 100)">Bottom</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- AMS Spools -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="ti ti-palette" style="color: var(--primary);"></i> AMS Filament Slots</div>
+                <button class="preset-btn" onclick="App.switchTab('filaments')"><i class="ti ti-settings"></i> Manage</button>
+              </div>
+              <div id="amsSlotGrid" class="ams-container">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= TAB: FILAMENT MANAGEMENT ================= -->
+      <section id="tab-filaments" class="tab-section">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="ti ti-cylinder" style="color: var(--primary);"></i> Filament Spool Inventory</div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                Manage spools in your workshop and sync them directly to your Bambu AMS slots in 1 click. Saved in <code>data/filaments.json</code>.
+              </p>
+            </div>
+            <button class="btn-primary" onclick="App.openModal('addFilamentModal')">
+              <i class="ti ti-plus"></i> Add New Spool
+            </button>
+          </div>
+
+          <!-- Spools Grid -->
+          <div id="filamentsGrid" class="filament-inventory-grid">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: AI EYE GUARDIAN ================= -->
+      <section id="tab-aieye" class="tab-section">
+        <div style="max-width: 860px; margin: 0 auto;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="ti ti-eye" style="color: var(--primary);"></i> AI Eye Guardian (Defect Watchdog)</div>
+              <button class="btn-primary" id="runInspectBtn" onclick="App.runAIEyeInspection()">
+                <i class="ti ti-scan"></i> Inspect Camera Now
+              </button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+              Vision analysis to detect bed adhesion failures, spaghetti stringing, and nozzle clogs before prints are ruined.
+            </p>
+
+            <div id="aiInspectionResult"></div>
+
+            <!-- Provider Selection -->
+            <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+              <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem;">AI Provider Configuration</h4>
+
+              <div class="form-group">
+                <label class="form-label">Provider</label>
+                <select id="aiProviderSelect" class="form-select" onchange="
+                  document.getElementById('openaiFields').style.display = this.value === 'openai' ? 'block' : 'none';
+                  document.getElementById('osFields').style.display = this.value === 'opensource' ? 'block' : 'none';
+                  document.getElementById('builtinFields').style.display = this.value === 'builtin_paid' ? 'block' : 'none';
+                ">
+                  <option value="openai">OpenAI API (GPT-4o / GPT-4o-mini Vision)</option>
+                  <option value="opensource">Open-Source Local API (Ollama / LocalAI / vLLM)</option>
+                  <option value="builtin_paid">Autonomous Built-in AI Eye (👑 Paid Lifetime Version)</option>
+                </select>
+              </div>
+
+              <!-- OpenAI -->
+              <div id="openaiFields">
+                <div class="form-group">
+                  <label class="form-label">OpenAI API Key</label>
+                  <input type="password" id="openaiApiKey" class="form-input" placeholder="sk-proj-...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Vision Model</label>
+                  <select id="openaiModel" class="form-select">
+                    <option value="gpt-4o-mini">gpt-4o-mini (Fast & Cost-effective)</option>
+                    <option value="gpt-4o">gpt-4o (High Precision)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Open Source -->
+              <div id="osFields" style="display: none;">
+                <div class="form-group">
+                  <label class="form-label">Endpoint Base URL (OpenAI-compatible)</label>
+                  <input type="text" id="osBaseUrl" class="form-input" placeholder="http://localhost:11434/v1">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Model Name</label>
+                  <input type="text" id="osModel" class="form-input" placeholder="llava, minicpm-v, qwen2-vl">
+                </div>
+              </div>
+
+              <!-- Builtin Paid Teaser -->
+              <div id="builtinFields" style="display: none; background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+                <h5 style="color: #eab308; font-weight: 700; margin-bottom: 6px;"><i class="ti ti-crown"></i> Zero-API Autonomous Guardian</h5>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                  Run failure detection completely locally with zero external API keys or subscription fees. One-time payment to own the full system forever.
+                </p>
+                <button class="btn-primary" onclick="App.openModal('proUpgradeModal')">
+                  <i class="ti ti-key"></i> Unlock Lifetime Guardian
+                </button>
+              </div>
+
+              <div style="margin-top: 1.25rem;">
+                <button class="btn-primary" onclick="App.saveAISettings()">
+                  <i class="ti ti-device-floppy"></i> Save AI Settings
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- History -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="ti ti-history" style="color: var(--primary);"></i> Recent AI Inspections</div>
+            </div>
+            <div id="aiHistoryContainer"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: VIDEO STUDIO & LOGO ================= -->
+      <section id="tab-videos" class="tab-section">
+        <div style="max-width: 860px; margin: 0 auto;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="ti ti-video" style="color: var(--primary);"></i> Custom Video Cloud Processor & Brand Watermark</div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+              Cloud-process final Bambu Lab timelapses with your company logo burned into the MP4 video using ffmpeg.
+            </p>
+
+            <div style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+              <i class="ti ti-cloud-upload" style="font-size: 36px; color: var(--primary); margin-bottom: 8px;"></i>
+              <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">Upload Custom Brand Logo (PNG / JPG)</div>
+              <div id="logoPreviewText" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem;">No custom logo uploaded yet</div>
+              <label class="btn-secondary" style="cursor: pointer;">
+                <i class="ti ti-photo"></i> Choose Logo File
+                <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/svg+xml" style="display: none;">
+              </label>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="form-group">
+                <label class="form-label">Watermark Position</label>
+                <select id="watermarkPos" class="form-select">
+                  <option value="bottom_right">Bottom Right (Standard)</option>
+                  <option value="top_right">Top Right</option>
+                  <option value="bottom_left">Bottom Left</option>
+                  <option value="top_left">Top Left</option>
+                  <option value="center">Center</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Logo Scale (% of Video Width)</label>
+                <select id="watermarkScale" class="form-select">
+                  <option value="12">12% (Discreet)</option>
+                  <option value="15" selected>15% (Recommended)</option>
+                  <option value="20">20% (Prominent)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn-primary" id="processDemoBtn" onclick="App.processDemoVideo()">
+              <i class="ti ti-sparkles"></i> Process & Generate Demo Video With Logo
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="ti ti-movie" style="color: var(--primary);"></i> Processed Videos & Timelapses</div>
+            </div>
+            <div id="videosListContainer"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: SCHEDULE (PRO) ================= -->
+      <section id="tab-schedule" class="tab-section">
+        <div class="pro-banner-card">
+          <div class="pro-banner-icon">
+            <i class="ti ti-lock"></i>
+          </div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+            Print Scheduling & Queue Loop is a PRO Feature
+          </h2>
+          <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.75rem;">
+            Autonomous 24/7 print scheduling, automated batch sequencing, off-peak electricity print triggers, and continuous multi-bed rotation are unlocked in <strong>Own your bambu Cloud Pro</strong>.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 1rem;">
+            <button class="btn-primary" onclick="App.openModal('proUpgradeModal')">
+              <i class="ti ti-crown"></i> Unlock Lifetime Pro ($29 One-Time)
+            </button>
+            <button class="btn-secondary" onclick="App.openModal('proUpgradeModal')">
+              <i class="ti ti-key"></i> Enter License Key
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB: PRINTERS MANAGEMENT ================= -->
+      <section id="tab-printers" class="tab-section">
+        <div style="max-width: 860px; margin: 0 auto;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="ti ti-printer" style="color: var(--primary);"></i> Configured Bambu Lab Printers</div>
+              <button class="btn-primary" onclick="App.openModal('addPrinterModal')">
+                <i class="ti ti-plus"></i> Add New Printer (Manual)
+              </button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+              Manually add your Bambu printers. All credentials and network parameters are stored purely in JSON (<code>data/printers.json</code>).
+            </p>
+            <div id="printersListTable"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Modal: Add Printer -->
+  <div id="addPrinterModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-weight: 800; font-size: 1.15rem;">
+          <i class="ti ti-plus" style="color: var(--primary);"></i> Add Bambu Printer Manually
+        </h3>
+        <button class="btn-icon" onclick="App.closeModal('addPrinterModal')"><i class="ti ti-x"></i></button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Printer Name</label>
+        <input type="text" id="newPrinterName" class="form-input" placeholder="e.g. Bambu P1S - Workshop">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Model</label>
+        <select id="newPrinterModel" class="form-select">
+          <option value="P1S">Bambu Lab P1S</option>
+          <option value="X1C">Bambu Lab X1-Carbon</option>
+          <option value="P1P">Bambu Lab P1P</option>
+          <option value="A1">Bambu Lab A1</option>
+          <option value="A1_Mini">Bambu Lab A1 Mini</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Local IP Address</label>
+        <input type="text" id="newPrinterIp" class="form-input" placeholder="192.168.1.xxx">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label">Access Code (LAN)</label>
+          <input type="text" id="newPrinterAccessCode" class="form-input" placeholder="8-character code">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Serial Number</label>
+          <input type="text" id="newPrinterSerial" class="form-input" placeholder="01P00C...">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn-secondary" onclick="App.closeModal('addPrinterModal')">Cancel</button>
+        <button class="btn-primary" onclick="App.submitNewPrinter()">Save Printer to JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Filament Spool -->
+  <div id="addFilamentModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-weight: 800; font-size: 1.15rem;">
+          <i class="ti ti-cylinder" style="color: var(--primary);"></i> Add Filament Spool
+        </h3>
+        <button class="btn-icon" onclick="App.closeModal('addFilamentModal')"><i class="ti ti-x"></i></button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Brand</label>
+        <input type="text" id="spoolBrand" class="form-input" placeholder="e.g. Polymaker, Sunlu, eSun, Bambu">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label">Material</label>
+          <select id="spoolMaterial" class="form-select">
+            <option value="PLA">PLA</option>
+            <option value="PETG">PETG</option>
+            <option value="TPU">TPU (Flexible)</option>
+            <option value="ABS">ABS</option>
+            <option value="ASA">ASA</option>
+            <option value="PLA-CF">PLA-CF</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color Name</label>
+          <input type="text" id="spoolColorName" class="form-input" placeholder="e.g. Matte Charcoal Black">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 80px 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label">Color Hex</label>
+          <input type="color" id="spoolColorHex" value="#f97316" style="width:100%; height:42px; border:none; border-radius:var(--radius-sm); cursor:pointer;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Weight Remaining (grams)</label>
+          <input type="number" id="spoolWeight" class="form-input" value="1000">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn-secondary" onclick="App.closeModal('addFilamentModal')">Cancel</button>
+        <button class="btn-primary" onclick="App.submitNewFilament()">Add Spool to Stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Pro License Upgrade -->
+  <div id="proUpgradeModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-weight: 800; font-size: 1.15rem; color: #eab308;">
+          <i class="ti ti-crown"></i> Own your bambu Cloud Pro
+        </h3>
+        <button class="btn-icon" onclick="App.closeModal('proUpgradeModal')"><i class="ti ti-x"></i></button>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
+        Upgrade to Pro Lifetime edition (One-Time Payment):
+        <br>• <strong>Autonomous Built-in AI Eye</strong>: Defect guardian with zero external API fees.
+        <br>• <strong>Print Scheduling & Queue Loops</strong>: Automated 24/7 printing.
+        <br>• <strong>Priority Cloud Video Processing</strong>.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Enter License Key</label>
+        <input type="text" id="proLicenseKeyInput" class="form-input" placeholder="PRO-XXXX-XXXX-XXXX">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn-secondary" onclick="App.closeModal('proUpgradeModal')">Close</button>
+        <button class="btn-primary" onclick="App.submitProKey()">Activate License</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js?v=2.0"></script>
+</body>
+</html>

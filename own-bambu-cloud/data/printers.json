@@ -1,0 +1,14 @@
+[
+  {
+    "name": "p1S",
+    "model": "P1S",
+    "ip": "192.168.18.61",
+    "access_code": "5e1a455a",
+    "serial": "01P00C572302982",
+    "mqtt_port": 8883,
+    "camera_port": 6000,
+    "is_default": true,
+    "id": "printer-1794838846527",
+    "created_at": 1794838846.5271246
+  }
+]

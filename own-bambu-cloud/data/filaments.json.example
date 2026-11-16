@@ -1,0 +1,22 @@
+[
+  {
+    "id": "spool-example-1",
+    "brand": "Bambu Lab",
+    "material": "PLA",
+    "color_name": "Matte Charcoal",
+    "color_hex": "#111827",
+    "remaining_grams": 850.0,
+    "initial_grams": 1000.0,
+    "diameter": 1.75
+  },
+  {
+    "id": "spool-example-2",
+    "brand": "Polymaker",
+    "material": "PETG",
+    "color_name": "Orange Fire",
+    "color_hex": "#f97316",
+    "remaining_grams": 1000.0,
+    "initial_grams": 1000.0,
+    "diameter": 1.75
+  }
+]

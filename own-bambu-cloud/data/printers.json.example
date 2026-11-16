@@ -1,0 +1,13 @@
+[
+  {
+    "id": "printer-example",
+    "name": "Bambu Lab P1S (Workshop)",
+    "model": "P1S",
+    "ip": "192.168.1.150",
+    "access_code": "12345678",
+    "serial": "01P00C123456789",
+    "mqtt_port": 8883,
+    "camera_port": 6000,
+    "is_default": true
+  }
+]

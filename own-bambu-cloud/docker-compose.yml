@@ -1,0 +1,17 @@
+services:
+  own-bambu-cloud:
+    build: .
+    image: own-bambu-cloud:latest
+    container_name: own-bambu-cloud
+    restart: unless-stopped
+    ports:
+      - "9930:9930"
+    volumes:
+      - ./data:/app/data
+      - ./app:/app/app
+      - ./static:/app/static
+    environment:
+      - DATA_DIR=/app/data
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

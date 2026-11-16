@@ -1,0 +1,37 @@
+{
+  "app_name": "Own your bambu Cloud",
+  "author": "ryanbenhassine",
+  "copyright": "Copyright (c) 2026 Ryan Ben Hassine",
+  "version": "1.0.0-oss",
+  "theme": "dark",
+  "ai_eye": {
+    "provider": "openai",
+    "enabled": false,
+    "auto_interval_seconds": 120,
+    "openai": {
+      "api_key": "",
+      "model": "gpt-4o-mini"
+    },
+    "opensource": {
+      "base_url": "http://localhost:11434/v1",
+      "model": "llava",
+      "api_key": ""
+    },
+    "builtin_paid": {
+      "unlocked": false,
+      "license_key": ""
+    }
+  },
+  "video_processor": {
+    "logo_path": "",
+    "logo_filename": "",
+    "watermark_position": "bottom_right",
+    "watermark_opacity": 0.85,
+    "watermark_scale_pct": 15,
+    "add_telemetry_hud": true
+  },
+  "schedule_pro": {
+    "unlocked": false,
+    "license_key": ""
+  }
+}
